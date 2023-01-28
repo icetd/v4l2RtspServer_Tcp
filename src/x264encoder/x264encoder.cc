@@ -36,13 +36,54 @@ int X264Encoder::initialize()
 	param->i_fps_den = 1;
 	param->i_fps_num = 30;
 	
-	/* Use minimum latency */
-	param->rc.i_lookahead = 0;
+	/* Use minimum latency ultrafast*/
 	param->i_sync_lookahead = 0;
-	param->i_bframe = 0;
 	param->b_sliced_threads = 1;
 	param->b_vfr_input = 0;
+
+	param->b_cabac = 0;
+	/* 没有B帧
+	*/
+	param->i_bframe = 0;
+	/* 设置intra划分的partition，这里应该是不进行划分，只使用16x16
+	*/
+	param->analyse.intra = 0;
+	/* 设置inter划分的partition，这里应该是不进行划分，只使用16x16
+	*/
+	param->analyse.inter = 0;
+	/* 不使用8x8的的DCT变换
+	*/
+	param->analyse.b_transform_8x8 = 0;
+	/* 运动估计：DIA
+	*/
+	param->analyse.i_me_method = X264_ME_DIA;
+	/* 亚像素运动估计精度：0,表示只进行整像素运动估计
+	*/
+	param->analyse.i_subpel_refine = 0;
+	/* 关闭自适应量化
+	*/
+	param->rc.i_aq_mode = 0;
+	/* 禁止每个宏块的分区拥有自己的参考编号
+	*/
+	param->analyse.b_mixed_references = 0;
+	/* 不使用trellis优化
+	*/
+	param->analyse.i_trellis = 0;
+	/* 自适应B帧判断的概率（从-100到100）
+	*/
+	param->i_bframe_adaptive = X264_B_ADAPT_NONE;
+	/* 不使用mbtree
+	*/
 	param->rc.b_mb_tree = 0;
+	/* 权重预测中，P帧的权值
+	*/
+	param->analyse.i_weighted_pred = X264_WEIGHTP_NONE;
+	/* 显式的B帧权重预测
+	*/
+	param->analyse.b_weighted_bipred = 0;
+	/* mbtree前向预测的帧的数量
+	*/
+	param->rc.i_lookahead = 0;
 
 	x264_param_apply_profile(param, "baseline");
 
