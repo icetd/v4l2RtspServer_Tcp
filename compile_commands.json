@@ -1,0 +1,82 @@
+[
+    {
+        "arguments": [
+            "/usr/bin/c++",
+            "-c",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/x264encoder",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/rtppackage",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/rtspserver",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/thirdparty/x264/include",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/thirdparty/libv4l2cc/include",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/src",
+            "-g",
+            "-std=gnu++14",
+            "-o",
+            "CMakeFiles/RtspServer.dir/src/x264encoder/x264encoder.cc.o",
+            "../src/x264encoder/x264encoder.cc"
+        ],
+        "directory": "/home/ubuntu/share/Vdev/v4l2RtspServer/build",
+        "file": "../src/x264encoder/x264encoder.cc"
+    },
+    {
+        "arguments": [
+            "/usr/bin/c++",
+            "-c",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/x264encoder",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/rtppackage",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/rtspserver",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/thirdparty/x264/include",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/thirdparty/libv4l2cc/include",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/src",
+            "-g",
+            "-std=gnu++14",
+            "-o",
+            "CMakeFiles/RtspServer.dir/src/rtspserver/RtspServer.cc.o",
+            "../src/rtspserver/RtspServer.cc"
+        ],
+        "directory": "/home/ubuntu/share/Vdev/v4l2RtspServer/build",
+        "file": "../src/rtspserver/RtspServer.cc"
+    },
+    {
+        "arguments": [
+            "/usr/bin/c++",
+            "-c",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/x264encoder",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/rtppackage",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/rtspserver",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/thirdparty/x264/include",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/thirdparty/libv4l2cc/include",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/src",
+            "-g",
+            "-std=gnu++14",
+            "-o",
+            "CMakeFiles/RtspServer.dir/src/main.cc.o",
+            "../src/main.cc"
+        ],
+        "directory": "/home/ubuntu/share/Vdev/v4l2RtspServer/build",
+        "file": "../src/main.cc"
+    },
+    {
+        "arguments": [
+            "/usr/bin/c++",
+            "-c",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/x264encoder",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/rtppackage",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/inc/rtspserver",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/thirdparty/x264/include",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/thirdparty/libv4l2cc/include",
+            "-I/home/ubuntu/share/Vdev/v4l2RtspServer/src",
+            "-g",
+            "-std=gnu++14",
+            "-o",
+            "CMakeFiles/RtspServer.dir/src/rtppackage/RtpPackage.cc.o",
+            "../src/rtppackage/RtpPackage.cc"
+        ],
+        "directory": "/home/ubuntu/share/Vdev/v4l2RtspServer/build",
+        "file": "../src/rtppackage/RtpPackage.cc"
+    }
+]
