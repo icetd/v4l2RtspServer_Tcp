@@ -15,6 +15,7 @@
 #include <x264encoder.h>
 #include <V4l2Device.h>
 #include <V4l2Capture.h>
+#include <thread>
 
 int RtspServer::handleCmd_OPTIONS(char *result, int cseq)
 {
@@ -145,12 +146,100 @@ int RtspServer::acceptClient()
 	return 0;
 }
 
+void RtspServer::thr_play(char *deviceName, char *client_ip, int client_fd, int &serverRtpSockfd, int &serverRtcpSockfd, int clientRtpPort, int clientRtcpPort)
+{
+	const char *in_devname = deviceName;	
+	v4l2IoType ioTypeIn  = IOTYPE_MMAP;
+	int format = 0;
+	int width = 640;
+	int height = 480;
+	int fps = 30;
+
+	V4L2DeviceParameters param(in_devname, V4L2_PIX_FMT_YUYV, width, height, fps, ioTypeIn, DEBUG);
+	V4l2Capture *videoCapture = V4l2Capture::create(param);
+	X264Encoder *encoder = new X264Encoder(width, height, X264_CSP_I422);
+	uint8_t *h264_buf = (uint8_t*) malloc(videoCapture->getBufferSize());
+
+	char clientIp[50];
+	strncpy(clientIp, client_ip, 50);	
+
+	RtpPacket *rtpPacket = (RtpPacket *)malloc(sizeof(RtpPacket) + 50000);
+	rtpPacket->rtpHeader.csrcLen = 0;
+	rtpPacket->rtpHeader.extension = 0;
+	rtpPacket->rtpHeader.padding = 0;
+	rtpPacket->rtpHeader.version = RTP_VERSION;
+	rtpPacket->rtpHeader.payloadType = RTP_PAYLOAD_TYPE_H264;
+	rtpPacket->rtpHeader.marker = 0;
+	rtpPacket->rtpHeader.seq = 0;
+	rtpPacket->rtpHeader.timestamp = 0;
+	rtpPacket->rtpHeader.ssrc = 0x88923423;
+
+	Rtp *rtp = new Rtp(clientIp, clientRtpPort, clientRtcpPort);
+	serverRtpSockfd = rtp->createUdpSocket();
+	serverRtcpSockfd = rtp->createUdpSocket();
+
+	rtp->bindSocketAddr(serverRtpSockfd, (char *) "0.0.0.0", SERVER_RTP_PORT);
+	rtp->bindSocketAddr(serverRtcpSockfd, (char *) "0.0.0.0", SERVER_RTCP_PORT);
+
+	LOG(INFO, "Start play");
+	LOG(INFO, "client ip:%s", client_ip);
+	LOG(INFO, "client port:%d", clientRtcpPort);
+
+	if (videoCapture == nullptr) {
+		LOG(WARN, "Cannot reading from V4l2 capture interface for device: %s", in_devname);
+	} else {
+		timeval tv;
+
+		LOG(NOTICE, "Start reading from %s", in_devname);
+
+		while(true) {
+			tv.tv_sec = 1;
+			tv.tv_usec = 0;
+			int startCode = 0;
+			int ret = videoCapture->isReadable(&tv);
+
+			if(ret == 1) {
+				uint8_t buffer[videoCapture->getBufferSize()];
+				int resize = videoCapture->read((char*)buffer, sizeof(buffer));
+				int frameSize = encoder->encode(buffer, resize, h264_buf);
+
+				if (resize == -1) {
+					LOG(NOTICE, "stop %s", strerror(errno));
+				} else {
+					if (rtp->startCode3((char *)h264_buf))
+						startCode = 3;
+					else 
+						startCode = 4;
+					frameSize -= startCode;
+					if (frameSize > 0) {
+						int re = rtp->rtpSendH264Frame(rtpPacket, client_fd, clientIp ,(char *)(h264_buf + startCode), frameSize);
+						if (re < 0) {
+							delete videoCapture;
+							free(h264_buf);
+
+							return;
+						}
+					}
+
+					LOG(INFO, "yuv422 frame size: %d", resize);
+				}
+			} else if (ret == -1) {
+				LOG(NOTICE, "stop %s", strerror(errno));
+			}
+		}
+		delete videoCapture;
+		free(h264_buf);
+	}
+
+}
+
 void RtspServer::Run()
 {
 	char method[40];
 	char url[100];
 	char version[40];
 	int CSeq;
+	char devIndex;
 
 	int clientRtpPort, clientRtcpPort;
 	char *rBuf = (char *) malloc(RECVMAXSIZE);
@@ -225,88 +314,25 @@ void RtspServer::Run()
 		send(client_fd, sBuf, strlen(sBuf), 0);
 		
 		if (!strcmp(method, "PLAY")) {
-			const char *in_devname = "/dev/video0";	
-			v4l2IoType ioTypeIn  = IOTYPE_MMAP;
-			int format = 0;
-			int width = 640;
-			int height = 480;
-			int fps = 30;
 
-			V4L2DeviceParameters param(in_devname, V4L2_PIX_FMT_YUYV, width, height, fps, ioTypeIn, DEBUG);
-			V4l2Capture *videoCapture = V4l2Capture::create(param);
-			X264Encoder *encoder = new X264Encoder(width, height, X264_CSP_I422);
-			uint8_t *h264_buf = (uint8_t*) malloc(videoCapture->getBufferSize());
-			
-			char clientIp[50];
-			strncpy(clientIp, client_ip, 50);	
+			sscanf(url, "rtsp://192.168.2.128:8554/video%c", &devIndex);
+		
+			switch (devIndex) {
+			case '0': {
+				std::thread playth(RtspServer::thr_play, (char *)"/dev/video0", client_ip, client_fd, 
+						std::ref(serverRtpSockfd), std::ref(serverRtcpSockfd), clientRtpPort, clientRtcpPort);
+				playth.detach();
+			    break;
+			}
+			case '2': {
+				std::thread playth(RtspServer::thr_play, (char *)"/dev/video2", client_ip, client_fd, 
+						std::ref(serverRtpSockfd), std::ref(serverRtcpSockfd), clientRtpPort, clientRtcpPort);
+				playth.detach();
+			    break;
+			}
 
-			RtpPacket *rtpPacket = (RtpPacket *)malloc(sizeof(RtpPacket) + 50000);
-			rtpPacket->rtpHeader.csrcLen = 0;
-			rtpPacket->rtpHeader.extension = 0;
-			rtpPacket->rtpHeader.padding = 0;
-			rtpPacket->rtpHeader.version = RTP_VERSION;
-			rtpPacket->rtpHeader.payloadType = RTP_PAYLOAD_TYPE_H264;
-			rtpPacket->rtpHeader.marker = 0;
-			rtpPacket->rtpHeader.seq = 0;
-			rtpPacket->rtpHeader.timestamp = 0;
-			rtpPacket->rtpHeader.ssrc = 0x88923423;
-
-			Rtp *rtp = new Rtp(clientIp, clientRtpPort, clientRtcpPort);
-			serverRtpSockfd = rtp->createUdpSocket();
-			serverRtcpSockfd = rtp->createUdpSocket();
-
-			rtp->bindSocketAddr(serverRtpSockfd, (char *) "0.0.0.0", SERVER_RTP_PORT);
-			rtp->bindSocketAddr(serverRtcpSockfd, (char *) "0.0.0.0", SERVER_RTCP_PORT);
-
-			LOG(INFO, "Start play");
-			LOG(INFO, "client ip:%s", client_ip);
-			LOG(INFO, "client port:%d", clientRtcpPort);
-
-			if (videoCapture == nullptr) {
-				LOG(WARN, "Cannot reading from V4l2 capture interface for device: %s", in_devname);
-			} else {
-				timeval tv;
-					
-				LOG(NOTICE, "Start reading from %s", in_devname);
-				
-				while(true) {
-					tv.tv_sec = 1;
-					tv.tv_usec = 0;
-					int startCode = 0;
-					int ret = videoCapture->isReadable(&tv);
-
-					if(ret == 1) {
-						uint8_t buffer[videoCapture->getBufferSize()];
-						int resize = videoCapture->read((char*)buffer, sizeof(buffer));
-						int frameSize = encoder->encode(buffer, resize, h264_buf);
-
-						if (resize == -1) {
-							LOG(NOTICE, "stop %s", strerror(errno));
-						} else {
-							if (rtp->startCode3((char *)h264_buf))
-								startCode = 3;
-							else 
-								startCode = 4;
-							frameSize -= startCode;
-							if (frameSize > 0) {
-								int re = rtp->rtpSendH264Frame(rtpPacket, client_fd, clientIp ,(char *)(h264_buf + startCode), frameSize);
-								if (re < 0) {
-									delete videoCapture;
-									free(h264_buf);
-									bzero(method, sizeof(method));
-									bzero(url, sizeof(url));
-									return;
-								}
-							}
-
-							LOG(INFO, "yuv422 frame size: %d", resize);
-						}
-					} else if (ret == -1) {
-						LOG(NOTICE, "stop %s", strerror(errno));
-					}
-				}
-				delete videoCapture;
-				free(h264_buf);
+			default:
+					break;
 			}
 		}
 

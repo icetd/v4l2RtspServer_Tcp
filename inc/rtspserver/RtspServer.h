@@ -24,12 +24,14 @@ public:
 	int acceptClient();
 
 	void Run();
-	
+
 	static int handleCmd_OPTIONS(char *result, int cseq);
 	static int handleCmd_DESCRIBE(char *reult, int cseq, char *url);
 	static int handleCmd_SETUP(char *result, int cseq, int clientRtpPort);
 	static int handleCmd_PLAY(char *result, int cseq);
+	static void thr_play(char *deviceName, char *client_ip, int client_fd, int &serverRtpSockfd, int &serverRtcpSockfd,  int clientRtpPort, int clientRtcpPort);
 private:
+
 	int m_sockfd;
 	int serverRtpSockfd;
 	int serverRtcpSockfd;

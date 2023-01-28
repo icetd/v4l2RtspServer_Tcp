@@ -68,4 +68,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SOURCE_DIR})
 
 #===================== LINKING LIBRARIES =======================#
-target_link_libraries(${PROJECT_NAME} v4l2cc x264 ${EXTRA_LIBS})
+target_link_libraries(${PROJECT_NAME} v4l2cc x264 pthread ${EXTRA_LIBS})
