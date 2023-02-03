@@ -85,7 +85,7 @@ int X264Encoder::initialize()
 	*/
 	param->rc.i_lookahead = 0;
 
-	x264_param_apply_profile(param, "baseline");
+	x264_param_apply_profile(param, "high422");
 
 	pHandle = x264_encoder_open(param);
 

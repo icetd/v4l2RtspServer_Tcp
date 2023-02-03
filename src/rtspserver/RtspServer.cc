@@ -314,9 +314,11 @@ void RtspServer::Run()
 		send(client_fd, sBuf, strlen(sBuf), 0);
 		
 		if (!strcmp(method, "PLAY")) {
-
-			sscanf(url, "rtsp://192.168.2.128:8554/video%c", &devIndex);
-		
+			
+			char temp;
+			sscanf(url, "%*[^o]%c%c", &temp, &devIndex);
+			LOG(NOTICE, "Device Index: video%c", devIndex);
+			
 			switch (devIndex) {
 			case '0': {
 				std::thread playth(RtspServer::thr_play, (char *)"/dev/video0", client_ip, client_fd, 
