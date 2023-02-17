@@ -25,8 +25,9 @@ Put the library in the corresponding position of thirdparty.
 use ffplay to play:
 ffplay -rtsp_transport tcp -i rtsp://127.0.0.1:8554/video0
 ```
-
-size: 640x480 url: rtsp://127.0.0.1:8554/video0
+only support tcp
+size: 640x480 
+url: rtsp://127.0.0.1:8554/video0
 
 You can modify the parameters from the source code.
 
