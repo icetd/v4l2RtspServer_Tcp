@@ -20,8 +20,7 @@ Put the library in the corresponding position of thirdparty.
 
 ## use
 ```
-./RtspServer
-
+./RtspServer > /dev/null 2>&1 &
 use ffplay to play:
 ffplay -rtsp_transport tcp -i rtsp://127.0.0.1:8554/video0
 ```
